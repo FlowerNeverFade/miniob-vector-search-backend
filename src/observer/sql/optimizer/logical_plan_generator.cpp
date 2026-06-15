@@ -335,6 +335,14 @@ RC LogicalPlanGenerator::create_plan(FilterStmt *filter_stmt, unique_ptr<Logical
       }
     }
 
+    if (left->value_type() == AttrType::VECTORS || right->value_type() == AttrType::VECTORS) {
+      if (left->value_type() != AttrType::VECTORS || right->value_type() != AttrType::VECTORS ||
+          (filter_unit->comp() != EQUAL_TO && filter_unit->comp() != NOT_EQUAL)) {
+        LOG_WARN("unsupported vector comparison");
+        return RC::UNSUPPORTED;
+      }
+    }
+
     ComparisonExpr *cmp_expr = new ComparisonExpr(filter_unit->comp(), std::move(left), std::move(right));
     cmp_exprs.emplace_back(cmp_expr);
   }

@@ -509,6 +509,9 @@ class CommandRunner:
     elif command == "ensure:nlj*2":
       if len(data.split("NESTED_LOOP_JOIN")) != 3:
         return False
+    elif command == "ensure:vector_index_scan":
+      if len(data.split("VECTOR_INDEX_SCAN")) != 2:
+        return False
     else:
       _logger.error("No such ensure command %s", command)
       return False

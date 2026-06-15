@@ -1,48 +1,92 @@
--- echo vector schema boundaries
+VECTOR SCHEMA BOUNDARIES
 
 create table t_vec_default(id int, emb vector);
+SUCCESS
 create table t_vec_empty(emb vector());
+FAILURE
 create table t_vec_too_big(emb vector(16384));
+FAILURE
 
--- echo vector schema and insert
+VECTOR SCHEMA AND INSERT
 
 create table t_vec(id int, emb vector(3), tag char);
+SUCCESS
 insert into t_vec values(1, string_to_vector('[1, 0, 0]'), 'a');
+SUCCESS
 insert into t_vec values(2, string_to_vector('[3, 0, 0]'), 'b');
+SUCCESS
 insert into t_vec values(3, string_to_vector('[6, 0, 0]'), 'c');
+SUCCESS
 insert into t_vec values(4, string_to_vector('[-2, 0, 0]'), 'd');
+SUCCESS
 insert into t_vec values(5, string_to_vector('[1, 2]'), 'bad');
+FAILURE
 insert into t_vec values(6, string_to_vector('[not-a-vector]'), 'bad');
+FAILURE
 
--- echo vector conversion and comparison
+VECTOR CONVERSION AND COMPARISON
 select id, vector_to_string(emb) as emb_text from t_vec where emb = string_to_vector('[1,0,0]');
+ID | EMB_TEXT
+1 | [1,0,0]
 select id from t_vec where emb > string_to_vector('[0,0,0]');
+FAILURE
 select id from t_vec where emb = 'x';
+FAILURE
 
--- echo distance functions
+DISTANCE FUNCTIONS
 select vector_to_string(string_to_vector('[-1.5, 0, 2.25]')) as v from t_vec limit 1;
+V
+[-1.5,0,2.25]
 select distance(string_to_vector('[1,2]'), string_to_vector('[4,6]'), euclidean) as l2 from t_vec limit 1;
+L2
+5
 select distance(string_to_vector('[1,0]'), string_to_vector('[0,1]'), cosine) as cos from t_vec limit 1;
+COS
+1
 select distance(string_to_vector('[1,2,3]'), string_to_vector('[4,5,6]'), 'INNER_PRODUCT') as dot from t_vec limit 1;
+DOT
+32
 select id from t_vec order by distance(emb, string_to_vector('[0,0]'), euclidean) asc limit 1;
+FAILURE
 select id from t_vec order by distance(emb, string_to_vector('[0,0,0]'), unknown_method) asc limit 1;
+FAILURE
 
--- echo distance, alias order by and limit
+DISTANCE, ALIAS ORDER BY AND LIMIT
 select id, distance(emb, string_to_vector('[0,0,0]'), euclidean) as dis from t_vec order by dis asc limit 2;
+ID | DIS
+1 | 1
+4 | 2
 select id, distance(emb, string_to_vector('[1,0,0]'), 'DOT') as score from t_vec order by score desc limit 2;
+ID | SCORE
+3 | 6
+2 | 3
 select id from t_vec order by distance(emb, string_to_vector('[0,0,0]'), euclidean) desc limit 1;
+ID
+3
 
--- echo vector index defaults
+VECTOR INDEX DEFAULTS
 create vector index idx_vec on t_vec(emb);
--- ensure:vector_index_scan select id, distance(emb, string_to_vector('[0,0,0]'), euclidean) as dis from t_vec order by distance(emb, string_to_vector('[0,0,0]'), euclidean) asc limit 2;
+SUCCESS
+ensure:vector_index_scan select id, distance(emb, string_to_vector('[0,0,0]'), euclidean) as dis from t_vec order by distance(emb, string_to_vector('[0,0,0]'), euclidean) asc limit 2;
 select id, distance(emb, string_to_vector('[0,0,0]'), euclidean) as dis from t_vec order by distance(emb, string_to_vector('[0,0,0]'), euclidean) asc limit 2;
+ID | DIS
+1 | 1
+4 | 2
 create vector index idx_vec_bad_scalar on t_vec(tag);
+FAILURE
 create vector index idx_vec_bad_lists on t_vec(emb) with (lists=0);
+FAILURE
 
--- echo vector index custom options
+VECTOR INDEX CUSTOM OPTIONS
 create table t_vec_custom(id int, emb vector(2));
+SUCCESS
 insert into t_vec_custom values(1, string_to_vector('[1.5, -2]'));
+SUCCESS
 insert into t_vec_custom values(2, string_to_vector('[0, 3]'));
+SUCCESS
 create vector index idx_vec_custom on t_vec_custom(emb) with (distance=cosine, type=ivfflat, lists=2, probes=1);
--- ensure:vector_index_scan select id from t_vec_custom order by distance(emb, string_to_vector('[1,0]'), cosine) asc limit 1;
+SUCCESS
+ensure:vector_index_scan select id from t_vec_custom order by distance(emb, string_to_vector('[1,0]'), cosine) asc limit 1;
 select id from t_vec_custom order by distance(emb, string_to_vector('[1,0]'), cosine) asc limit 1;
+ID
+1

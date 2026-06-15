@@ -161,7 +161,9 @@ jobs:
         shell: bash
         run: |
           echo "begin test..."
-          python3 test/case/miniob_test.py --test-cases=basic | tail -1 | grep "basic is success"
+          python3 test/case/miniob_test.py --test-cases=basic,vector-search | tee miniob_case.log
+          grep "basic is success" miniob_case.log
+          grep "vector-search is success" miniob_case.log
   sysbench-test:
     needs: [build-release]
     strategy:
