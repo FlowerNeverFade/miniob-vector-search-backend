@@ -27,7 +27,7 @@ created_indexes = {
 }
 
 def log_successful_sql(sql, response_text):
-    """Print a concise success marker for demo recording."""
+    """Print a concise success marker for local verification logs."""
     response_text = (response_text or "").strip()
     failed = (
         response_text == "FAILURE" or

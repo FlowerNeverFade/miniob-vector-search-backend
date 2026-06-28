@@ -1,6 +1,6 @@
 # MiniOB 向量检索前端控制台
 
-这是课程演示项目的 React Vite 前端，配合根目录下的 Flask 网关后端和 MiniOB Observer 使用。
+这是《数据库系统设计实践》课程项目的 React Vite 前端，配合根目录下的 Flask 网关后端和 MiniOB Observer 使用。
 
 ## 功能
 
@@ -16,11 +16,11 @@
 - MiniOB plain 协议端口：`localhost:6789`
 - Flask 网关：`http://localhost:5000`
 
-然后启动前端：
+在仓库根目录启动前端：
 
-```bash
-npm install
-npm run dev
+```powershell
+npm.cmd --prefix frontend install
+npm.cmd --prefix frontend run dev
 ```
 
 浏览器打开：
@@ -31,7 +31,8 @@ http://localhost:5173/
 
 ## 构建
 
-```bash
-npm run build
-npm run preview
+在仓库根目录执行：
+
+```powershell
+npm.cmd --prefix frontend run build
 ```

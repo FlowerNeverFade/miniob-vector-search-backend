@@ -39,4 +39,4 @@ frontend/.env.production.local
 frontend/.env.development.local
 backend/__pycache__/
 backend/*.pyc
-
+backend/*.log

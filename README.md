@@ -1,8 +1,8 @@
-# MiniOB 向量检索前后端完整演示项目
+# MiniOB 向量检索系统
 
 [![build](https://github.com/FlowerNeverFade/miniob-vector-search-backend/actions/workflows/build-test.yml/badge.svg)](https://github.com/FlowerNeverFade/miniob-vector-search-backend/actions/workflows/build-test.yml)
 
-本仓库是《数据库系统设计实践》课程项目的完整演示工程，基于 OceanBase MiniOB `main` 分支扩展向量数据库内核能力，并提供 Flask 网关后端与 React Vite 前端控制台。项目既可以作为 MiniOB 向量检索内核实现提交，也可以直接运行成一个可视化演示系统，用于展示建表、插入、向量距离计算、Top-N 检索、IVF_Flat 索引和结果可视化。
+本仓库为《数据库系统设计实践》课程项目 MiniOB 向量检索系统。项目基于 OceanBase MiniOB `main` 分支扩展向量数据库内核能力，并配套 Flask 网关后端与 React Vite 前端界面，用于完成课程要求的向量存储、距离计算、Top-N 查询、IVF_Flat 索引和本地功能验证。
 
 项目由三部分组成：
 
@@ -21,7 +21,7 @@
 | `src/` | MiniOB 向量检索内核实现 |
 | `test/case/test/vector-search.test` | 向量检索专项 SQL 回归用例 |
 | `backend/app.py` | Flask HTTP 网关，连接 MiniOB plain 协议服务 |
-| `frontend/` | React Vite 可视化控制台 |
+| `frontend/` | React Vite 前端界面 |
 | `.github/workflows/build-test.yml` | MiniOB 构建、回归、集成与性能测试 CI |
 
 ## 课程任务完成状态
@@ -139,101 +139,89 @@ limit 2;
 | 表与索引维护 | `src/observer/storage/table/table.*`, `src/observer/storage/table/heap_table_engine.*` |
 | 向量回归测试 | `test/case/test/vector-search.test`, `test/case/result/vector-search.result` |
 
-## MiniOB 构建与运行
+## MiniOB 构建与本地运行
 
-推荐使用课程资料包中的 WSL2 + Docker / `miniob-course` 环境，或者使用 GitHub Actions 中的 Ubuntu runner 环境。
+本机运行方式采用 WSL2 Ubuntu-24.04 构建和启动 MiniOB Observer，Windows 主机启动 Flask 网关后端与 React 前端界面。MiniOB 必须以 `plain` 文本协议模式监听 `6789` 端口，前端请求经 Flask 转发到 MiniOB。
 
-初始化依赖：
+### 1. 准备 WSL2 Ubuntu-24.04
 
-```bash
-sudo bash build.sh init
+在 Windows PowerShell 中安装 Ubuntu：
+
+```powershell
+wsl --install -d Ubuntu-24.04
 ```
 
-Debug 构建：
+如果系统提示重启，请重启后打开 Ubuntu-24.04，按提示创建 Linux 用户名和密码。
+
+### 2. 构建 MiniOB (Ubuntu)
+
+建议将仓库放到 Linux 文件系统中构建，避免 Windows/WSL 混用导致换行或文件权限问题：
 
 ```bash
+mkdir -p ~/MiniOB
+cp -r /mnt/d/shujvku/miniob-vector-search-backend ~/MiniOB/
+cd ~/MiniOB/miniob-vector-search-backend
+```
+
+安装课程环境依赖。课程资料包中的 `MiniOB原始环境包.tar.gz` 包含 `course_env/apt-packages.txt` 依赖清单，可先解压该目录再安装：
+
+```bash
+mkdir -p ~/miniob-course-env
+tar -xzf "/mnt/d/shujvku/《数据库系统设计实践》课程资料包/MiniOB原始环境包和操作说明/MiniOB原始环境包.tar.gz" -C ~/miniob-course-env course_env
+sudo apt update
+sudo xargs -a ~/miniob-course-env/course_env/apt-packages.txt apt install -y
+```
+
+然后初始化子模块并编译 Debug 版本：
+
+```bash
+git submodule update --init --recursive
+bash build.sh init
 bash build.sh debug --make -j"$(nproc)"
 ```
 
-Release 构建：
+### 3. 启动 MiniOB Observer (Ubuntu)
 
 ```bash
-bash build.sh release --make -j"$(nproc)"
-```
-
-运行 observer (CLI 交互模式)：
-
-```bash
-cd build_debug
-./bin/observer -f ../etc/observer.ini -P cli
-```
-
-## 运行前后端演示系统
-
-前后端演示系统由 MiniOB Observer、Flask 网关后端和 React 前端控制台组成。启动顺序如下。
-
-### 1. 启动 MiniOB Observer 数据库实例 (WSL2 / Docker)
-
-需要使用 `plain` 文本协议模式启动 MiniOB 实例，以便与后端的 TCP 客户端通信：
-
-```bash
-cd build_debug
+cd ~/MiniOB/miniob-vector-search-backend/build_debug
 ./bin/observer -f ../etc/observer.ini -p 6789 -P plain
 ```
 
-### 2. 启动 Flask 网关后端 (WSL2 / Docker)
+### 4. 启动 Flask 网关后端 (Windows)
 
-网关后端负责将前端发出的 HTTP 请求打包成 TCP 数据包与 MiniOB 通信：
+在仓库根目录执行：
 
-1. 进入 backend 目录：
+```powershell
+python -m pip install -r backend\requirements.txt
+python backend\app.py
+```
 
-   ```bash
-   cd backend
-   ```
+后端监听地址为 `http://localhost:5000`。MiniOB 未启动时访问 `http://localhost:5000/api/tables` 会返回连接错误；MiniOB 启动后会返回表信息。
 
-2. 安装依赖（主要为 `Flask` 与 `Flask-CORS`）：
+### 5. 启动 React Vite 前端界面 (Windows)
 
-   ```bash
-   pip install flask flask-cors
-   ```
+PowerShell 执行策略可能拦截 `npm.ps1`，本项目统一使用 `npm.cmd`：
 
-3. 启动 Flask 后端：
+```powershell
+npm.cmd --prefix frontend install
+npm.cmd --prefix frontend run dev
+```
 
-   ```bash
-   python app.py
-   ```
+浏览器打开：
 
-   后端将在 `http://localhost:5000` 监听。
+```text
+http://localhost:5173/
+```
 
-### 3. 启动 React Vite 前端控制台 (Windows 主机)
+前端生产构建命令：
 
-前端提供 SQL 终端、表结构查看、向量二维可视化和检索结果对比视图。
+```powershell
+npm.cmd --prefix frontend run build
+```
 
-1. 进入 frontend 目录：
+### 6. 向量测试 SQL 参考
 
-   ```bash
-   cd frontend
-   ```
-
-2. 安装依赖：
-
-   ```bash
-   npm install
-   ```
-
-3. 启动开发服务器：
-
-   ```bash
-   npm run dev
-   ```
-
-4. 在浏览器中打开本地预览地址：
-
-   `http://localhost:5173/`
-
-### 4. 向量测试 SQL 参考
-
-进入 Web 控制台后，您可以在 SQL Terminal 中执行以下语句来验证向量检索功能：
+进入前端界面后，可以在 SQL Terminal 中执行以下语句来验证向量检索功能：
 
 ```sql
 -- 创建 3 维向量表
