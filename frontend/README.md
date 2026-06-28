@@ -16,11 +16,18 @@
 - MiniOB plain 协议端口：`localhost:6789`
 - Flask 网关：`http://localhost:5000`
 
-在仓库根目录启动前端：
+Windows PowerShell 在仓库根目录启动前端：
 
 ```powershell
 npm.cmd --prefix frontend install
 npm.cmd --prefix frontend run dev
+```
+
+macOS/Linux 在仓库根目录启动前端：
+
+```bash
+npm --prefix frontend install
+npm --prefix frontend run dev
 ```
 
 浏览器打开：
@@ -31,8 +38,14 @@ http://localhost:5173/
 
 ## 构建
 
-在仓库根目录执行：
+Windows PowerShell：
 
 ```powershell
 npm.cmd --prefix frontend run build
+```
+
+macOS/Linux：
+
+```bash
+npm --prefix frontend run build
 ```

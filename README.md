@@ -141,11 +141,17 @@ limit 2;
 
 ## MiniOB 构建与本地运行
 
-本机运行方式采用 WSL2 Ubuntu-24.04 构建和启动 MiniOB Observer，Windows 主机启动 Flask 网关后端与 React 前端界面。MiniOB 必须以 `plain` 文本协议模式监听 `6789` 端口，前端请求经 Flask 转发到 MiniOB。
+本地运行包含三个进程：
 
-### 1. 准备 WSL2 Ubuntu-24.04
+- MiniOB Observer：提供数据库内核能力，使用 `plain` 文本协议监听 `6789` 端口。
+- Flask 网关后端：监听 `5000` 端口，把 HTTP 请求转发到 MiniOB Observer。
+- React Vite 前端界面：监听 `5173` 端口，通过 Flask 网关执行 SQL 和读取表信息。
 
-在 Windows PowerShell 中安装 Ubuntu：
+Linux/WSL 环境最接近课程实验环境，Windows 推荐使用 WSL2 Ubuntu-24.04 构建和启动 MiniOB Observer。
+
+### Windows
+
+1. 安装 WSL2 Ubuntu-24.04。
 
 ```powershell
 wsl --install -d Ubuntu-24.04
@@ -153,9 +159,7 @@ wsl --install -d Ubuntu-24.04
 
 如果系统提示重启，请重启后打开 Ubuntu-24.04，按提示创建 Linux 用户名和密码。
 
-### 2. 构建 MiniOB (Ubuntu)
-
-建议将仓库放到 Linux 文件系统中构建，避免 Windows/WSL 混用导致换行或文件权限问题：
+2. 在 Ubuntu 中复制仓库并构建 MiniOB。建议放到 Linux 文件系统中构建，避免 Windows/WSL 混用导致换行或文件权限问题。
 
 ```bash
 mkdir -p ~/MiniOB
@@ -163,7 +167,7 @@ cp -r /mnt/d/shujvku/miniob-vector-search-backend ~/MiniOB/
 cd ~/MiniOB/miniob-vector-search-backend
 ```
 
-安装课程环境依赖。课程资料包中的 `MiniOB原始环境包.tar.gz` 包含 `course_env/apt-packages.txt` 依赖清单，可先解压该目录再安装：
+课程资料包中的 `MiniOB原始环境包.tar.gz` 包含 `course_env/apt-packages.txt` 依赖清单，可先解压该目录再安装：
 
 ```bash
 mkdir -p ~/miniob-course-env
@@ -172,7 +176,7 @@ sudo apt update
 sudo xargs -a ~/miniob-course-env/course_env/apt-packages.txt apt install -y
 ```
 
-然后初始化子模块并编译 Debug 版本：
+初始化子模块并编译 Debug 版本：
 
 ```bash
 git submodule update --init --recursive
@@ -180,46 +184,149 @@ bash build.sh init
 bash build.sh debug --make -j"$(nproc)"
 ```
 
-### 3. 启动 MiniOB Observer (Ubuntu)
+3. 在 Ubuntu 中启动 MiniOB Observer。
 
 ```bash
 cd ~/MiniOB/miniob-vector-search-backend/build_debug
 ./bin/observer -f ../etc/observer.ini -p 6789 -P plain
 ```
 
-### 4. 启动 Flask 网关后端 (Windows)
-
-在仓库根目录执行：
+4. 在 Windows PowerShell 中启动 Flask 网关后端。
 
 ```powershell
+cd D:\shujvku\miniob-vector-search-backend
 python -m pip install -r backend\requirements.txt
 python backend\app.py
 ```
 
-后端监听地址为 `http://localhost:5000`。MiniOB 未启动时访问 `http://localhost:5000/api/tables` 会返回连接错误；MiniOB 启动后会返回表信息。
-
-### 5. 启动 React Vite 前端界面 (Windows)
-
-PowerShell 执行策略可能拦截 `npm.ps1`，本项目统一使用 `npm.cmd`：
+5. 在 Windows PowerShell 中启动 React Vite 前端界面。PowerShell 执行策略可能拦截 `npm.ps1`，因此 Windows 下使用 `npm.cmd`。
 
 ```powershell
+cd D:\shujvku\miniob-vector-search-backend
 npm.cmd --prefix frontend install
 npm.cmd --prefix frontend run dev
 ```
 
-浏览器打开：
+浏览器打开 `http://localhost:5173/`。
 
-```text
-http://localhost:5173/
+### Linux
+
+以下命令适用于 Ubuntu/Debian 系发行版。其他发行版可按 `course_env/apt-packages.txt` 中的包名安装对应依赖。
+
+```bash
+git clone https://github.com/FlowerNeverFade/miniob-vector-search-backend.git
+cd miniob-vector-search-backend
 ```
 
-前端生产构建命令：
+安装课程环境依赖：
 
-```powershell
-npm.cmd --prefix frontend run build
+```bash
+mkdir -p ~/miniob-course-env
+tar -xzf "/path/to/MiniOB原始环境包.tar.gz" -C ~/miniob-course-env course_env
+sudo apt update
+sudo xargs -a ~/miniob-course-env/course_env/apt-packages.txt apt install -y
 ```
 
-### 6. 向量测试 SQL 参考
+构建 MiniOB：
+
+```bash
+git submodule update --init --recursive
+bash build.sh init
+bash build.sh debug --make -j"$(nproc)"
+```
+
+启动 MiniOB Observer：
+
+```bash
+cd build_debug
+./bin/observer -f ../etc/observer.ini -p 6789 -P plain
+```
+
+另开一个终端启动 Flask 网关后端：
+
+```bash
+cd miniob-vector-search-backend
+python3 -m pip install -r backend/requirements.txt
+python3 backend/app.py
+```
+
+再另开一个终端启动前端：
+
+```bash
+cd miniob-vector-search-backend
+npm --prefix frontend install
+npm --prefix frontend run dev
+```
+
+浏览器打开 `http://localhost:5173/`。
+
+### macOS
+
+macOS 可直接本机编译运行，CI 已包含 macOS 构建验证。若希望与课程环境完全一致，也可以在 macOS 上使用 Linux 虚拟机或容器。
+
+安装 Xcode Command Line Tools 与 Homebrew 依赖：
+
+```bash
+xcode-select --install
+brew install cmake bison flex pkg-config python node
+```
+
+Apple Silicon 机器通常需要把 Homebrew 的新版 `bison` 放到 `PATH` 前面：
+
+```bash
+export PATH="/opt/homebrew/opt/bison/bin:$PATH"
+```
+
+Intel Mac 如使用 Homebrew 默认路径，可改为：
+
+```bash
+export PATH="/usr/local/opt/bison/bin:$PATH"
+```
+
+克隆、初始化并构建：
+
+```bash
+git clone https://github.com/FlowerNeverFade/miniob-vector-search-backend.git
+cd miniob-vector-search-backend
+git submodule update --init --recursive
+sudo bash build.sh init
+bash build.sh debug --make -j4
+```
+
+启动 MiniOB Observer：
+
+```bash
+cd build_debug
+./bin/observer -f ../etc/observer.ini -p 6789 -P plain
+```
+
+另开一个终端启动 Flask 网关后端：
+
+```bash
+cd miniob-vector-search-backend
+python3 -m pip install -r backend/requirements.txt
+python3 backend/app.py
+```
+
+再另开一个终端启动前端：
+
+```bash
+cd miniob-vector-search-backend
+npm --prefix frontend install
+npm --prefix frontend run dev
+```
+
+浏览器打开 `http://localhost:5173/`。
+
+### 运行检查
+
+- MiniOB Observer：`localhost:6789`
+- Flask 网关后端：`http://localhost:5000`
+- React Vite 前端：`http://localhost:5173/`
+- MiniOB 未启动时访问 `http://localhost:5000/api/tables` 会返回连接错误；MiniOB 启动后会返回表信息。
+- 前端生产构建：Windows 使用 `npm.cmd --prefix frontend run build`，Linux/macOS 使用 `npm --prefix frontend run build`。
+
+### 向量测试 SQL 参考
 
 进入前端界面后，可以在 SQL Terminal 中执行以下语句来验证向量检索功能：
 
