@@ -1,6 +1,6 @@
 # MiniOB 向量检索系统
 
-[![build](https://github.com/FlowerNeverFade/miniob-vector-search-backend/actions/workflows/build-test.yml/badge.svg)](https://github.com/FlowerNeverFade/miniob-vector-search-backend/actions/workflows/build-test.yml)
+[![build](https://github.com/FlowerNeverFade/miniob-vector-search/actions/workflows/build-test.yml/badge.svg)](https://github.com/FlowerNeverFade/miniob-vector-search/actions/workflows/build-test.yml)
 
 本仓库为《数据库系统设计实践》课程项目 MiniOB 向量检索系统。项目基于 OceanBase MiniOB `main` 分支扩展向量数据库内核能力，并配套 Flask 网关后端与 React Vite 前端界面，用于完成课程要求的向量存储、距离计算、Top-N 查询、IVF_Flat 索引和本地功能验证。
 
@@ -163,8 +163,8 @@ wsl --install -d Ubuntu-24.04
 
 ```bash
 mkdir -p ~/MiniOB
-cp -r /mnt/d/shujvku/miniob-vector-search-backend ~/MiniOB/
-cd ~/MiniOB/miniob-vector-search-backend
+cp -r /mnt/d/shujvku/miniob-vector-search ~/MiniOB/
+cd ~/MiniOB/miniob-vector-search
 ```
 
 课程资料包中的 `MiniOB原始环境包.tar.gz` 包含 `course_env/apt-packages.txt` 依赖清单，可先解压该目录再安装：
@@ -187,14 +187,14 @@ bash build.sh debug --make -j"$(nproc)"
 3. 在 Ubuntu 中启动 MiniOB Observer。
 
 ```bash
-cd ~/MiniOB/miniob-vector-search-backend/build_debug
+cd ~/MiniOB/miniob-vector-search/build_debug
 ./bin/observer -f ../etc/observer.ini -p 6789 -P plain
 ```
 
 4. 在 Windows PowerShell 中启动 Flask 网关后端。
 
 ```powershell
-cd D:\shujvku\miniob-vector-search-backend
+cd D:\shujvku\miniob-vector-search
 python -m pip install -r backend\requirements.txt
 python backend\app.py
 ```
@@ -202,7 +202,7 @@ python backend\app.py
 5. 在 Windows PowerShell 中启动 React Vite 前端界面。PowerShell 执行策略可能拦截 `npm.ps1`，因此 Windows 下使用 `npm.cmd`。
 
 ```powershell
-cd D:\shujvku\miniob-vector-search-backend
+cd D:\shujvku\miniob-vector-search
 npm.cmd --prefix frontend install
 npm.cmd --prefix frontend run dev
 ```
@@ -214,8 +214,8 @@ npm.cmd --prefix frontend run dev
 以下命令适用于 Ubuntu/Debian 系发行版。其他发行版可按 `course_env/apt-packages.txt` 中的包名安装对应依赖。
 
 ```bash
-git clone https://github.com/FlowerNeverFade/miniob-vector-search-backend.git
-cd miniob-vector-search-backend
+git clone https://github.com/FlowerNeverFade/miniob-vector-search.git
+cd miniob-vector-search
 ```
 
 安装课程环境依赖：
@@ -245,7 +245,7 @@ cd build_debug
 另开一个终端启动 Flask 网关后端：
 
 ```bash
-cd miniob-vector-search-backend
+cd miniob-vector-search
 python3 -m pip install -r backend/requirements.txt
 python3 backend/app.py
 ```
@@ -253,7 +253,7 @@ python3 backend/app.py
 再另开一个终端启动前端：
 
 ```bash
-cd miniob-vector-search-backend
+cd miniob-vector-search
 npm --prefix frontend install
 npm --prefix frontend run dev
 ```
@@ -286,8 +286,8 @@ export PATH="/usr/local/opt/bison/bin:$PATH"
 克隆、初始化并构建：
 
 ```bash
-git clone https://github.com/FlowerNeverFade/miniob-vector-search-backend.git
-cd miniob-vector-search-backend
+git clone https://github.com/FlowerNeverFade/miniob-vector-search.git
+cd miniob-vector-search
 git submodule update --init --recursive
 sudo bash build.sh init
 bash build.sh debug --make -j4
@@ -303,7 +303,7 @@ cd build_debug
 另开一个终端启动 Flask 网关后端：
 
 ```bash
-cd miniob-vector-search-backend
+cd miniob-vector-search
 python3 -m pip install -r backend/requirements.txt
 python3 backend/app.py
 ```
@@ -311,7 +311,7 @@ python3 backend/app.py
 再另开一个终端启动前端：
 
 ```bash
-cd miniob-vector-search-backend
+cd miniob-vector-search
 npm --prefix frontend install
 npm --prefix frontend run dev
 ```
@@ -374,7 +374,7 @@ CI 覆盖：
 - `benchmark-test`
 - sysbench 矩阵
 
-最新状态请以仓库顶部 badge 和 Actions 页面为准：<https://github.com/FlowerNeverFade/miniob-vector-search-backend/actions>
+最新状态请以仓库顶部 badge 和 Actions 页面为准：<https://github.com/FlowerNeverFade/miniob-vector-search/actions>
 
 ## 许可证
 
