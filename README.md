@@ -20,6 +20,8 @@
 | --- | --- |
 | `src/` | MiniOB 向量检索内核实现 |
 | `test/case/test/vector-search.test` | 向量检索专项 SQL 回归用例 |
+| `benchmark/vector_search_benchmark.py` | 向量检索性能实验脚本 |
+| `benchmark/vector_results/` | 数据规模、索引参数、延迟、召回率和加速比实验结果 |
 | `backend/app.py` | Flask HTTP 网关，连接 MiniOB plain 协议服务 |
 | `frontend/` | React Vite 前端界面 |
 | `.github/workflows/build-test.yml` | MiniOB 构建、回归、集成与性能测试 CI |
@@ -346,6 +348,22 @@ create vector index idx_vec on t_vec(emb) with (distance=euclidean, type=ivfflat
 -- 向量检索并计算距离排序
 select id, distance(emb, string_to_vector('[0,0,0]'), euclidean) as dis from t_vec order by dis asc limit 3;
 ```
+
+## 性能实验
+
+向量检索性能实验脚本位于 `benchmark/vector_search_benchmark.py`，直接连接 MiniOB `plain` 协议端口统计真实 SQL 延迟。实验覆盖：
+
+- 数据规模：`N=100,1000,5000,10000`
+- 向量维度：`d=16,128`
+- IVF_Flat 参数：`lists=2,4,8,16`，`probes=1,2,4`
+- 指标：Brute Force 延迟、IVF_Flat 延迟、Recall@K、Speedup、索引构建耗时
+
+已完成的完整实验结果位于：
+
+- `benchmark/vector_results/vector_search_benchmark_full.csv`
+- `benchmark/vector_results/vector_search_benchmark_full.md`
+
+本次实验共 96 组参数组合，全部成功执行。结果显示 Brute Force 延迟随 `N` 与 `d` 增大明显上升；IVF_Flat 在大规模数据上保持毫秒级查询延迟。`probes` 增大通常提升召回率但增加查询耗时，`lists` 增大通常减少候选数量并降低延迟，但在小数据集低 `probes` 下会降低 Recall@K。示例结果中 `N=10000,d=128,lists=16,probes=1` 的 Speedup 达到 `488.04x`。
 
 ## 测试与验收
 
